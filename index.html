@@ -1,0 +1,393 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2113.6">
+  <style type="text/css">
+  </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>💻 圖書館當值點名系統</title>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Orbitron'>
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+	<script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+	<script>
+	$( function() {
+		$( "#tabs" ).tabs();
+	} );
+	</script>
+</head>
+<body>
+<body onload="show()">
+    <div id="tabs">
+        <ul>
+            <li onclick="document.getElementById('text').focus();"><a href="#patronBarcodeSection">Student ID Card</a></li>
+            <li onclick="document.getElementById('patronID').focus();"><a href="#patronIDSection">Class & Class No.</a></li>
+            <li onclick="document.getElementById('otherID').focus();"><a href="#otherIDSection">Student Number</a></li>
+        </ul>
+        <div id="patronBarcodeSection">
+            <br><label>Student ID Card: </label><input type="text" autofocus id="text">
+        </div>
+        <div id="patronIDSection">
+            <br><label>Class & Class No. (2H99): </label><input type="text" id="patronID">
+        </div>
+        <div id="otherIDSection">
+            <br><label>Student Number (21999): </label><input type="text" id="otherID">
+        </div>
+    </div>
+    <div>
+        <h2 id="timeSlot"><span id="banner"></span><span id="clock" onload="showTime()"></span>&nbsp;&nbsp;
+        <span style="visibility:hidden;display:none">【<span <span id="period"></span> 】
+        <span id="x" onclick="localStorage.clear();alert('Record on this page has been cleared.');window.location.href=''">&times;</span> </span>
+        &nbsp;
+        <span onclick="document.documentElement.requestFullscreen();"><img src="fullscreen.png" width="15px"></span>
+        </h2>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>請選擇下載格式</h2>
+            </div>
+            <div class="modal-body">
+                <p><a href="https://docs.google.com/spreadsheets/d/14DzmjfQTArHO2FmXFQNhxUUM51d95F66g004F39XtqY/edit" class="popup-content" target="_blank">瀏覽整個Google Sheets</a></p>
+                <p><a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRTvlVV0GjqZbyoACm2zmhwCOJJ_ZtHoSJPzffp5lqP63Yy8mYSkmhICuwQ6WCpGTP--IU2YKVUjN-q/pubhtml" class="popup-content" target="_blank">瀏覽整個網站紀錄</a></p>
+            </div>
+            <div class="modal-footer">
+                <h3>下載由2021年11月1日起的所有紀錄</h3>
+            </div>
+        </div>
+    </div>
+
+    <form id="myForm">
+        <h3><span class="header">最新輸入資料（包括登錄在 <a href="https://docs.google.com/spreadsheets/d/14DzmjfQTArHO2FmXFQNhxUUM51d95F66g004F39XtqY/edit" target="_blank" style="color:lightgreen;text-decoration:none"><img src="view.png" width="15px"> Google Sheets</a> ）</span></h3>
+        <label>班級學號：</label> <input name="input" id="input"><br>
+        <label>中文名字：</label> <input name="chi" id="chi"><br>
+        <label>英文名字：</label> <input name="eng" id="eng"><br>
+        <label>學生編號：</label> <input name="reg" id="reg"><br>
+        <label>登入時間：</label> <input name="time" id="nowtime"><br>
+        <label>今天日期：</label> <input type="date" id="tdydate" name="date"><br>
+        <label>額外當值：</label> <input id="bonus" name="bonus"><br>
+        <label>需當值日：</label> <input id="duties" name="duties"><br>
+	<label>lunchtime: </label> <input id="Lunchtime" name="Lunchtime"><br>
+        <label>After-school：</label> <input id="After-school" name="After-school"> <br>
+    </form>
+    <br><br>
+    <button onclick="subForm()" id="SubForm" style="visibility: hidden;">Submit</button>
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+    <script src="students.js"></script>
+    <script>
+        var key = 0;
+        $("#text").keypress(function() {
+            key++;
+            if (key == 8) {
+                setTimeout(function(){ 
+                    patronBarcode();
+                }, 50);
+            }
+        });
+        $("#patronID").keypress(function() {
+            key++;
+            if (key == 4) {
+                setTimeout(function(){ 
+                    patronID();
+                }, 50);
+            }
+        });
+        $("#otherID").keypress(function() {
+            key++;
+            if (key == 5) {
+                setTimeout(function(){ 
+                    otherID();
+                }, 50);
+            }
+        });
+        function patronBarcode() {
+            var i;
+            function getID() {
+                key = 0;
+                for (i = 0; i <= students.length; i++) {
+                    try {
+                        if (students[i].no == newValue) {
+                            break;
+                        } else {
+                            continue;
+                        }
+                    } catch (TypeError) {
+                        new Notify ({
+                            status: 'error',
+                            title: `對不起，你不在我們的名單中！`,
+                            text: `請聯絡在場的committee！`,
+                            autoclose: true
+                        })
+                    }
+                }
+                return i;
+            }
+            var date = new Date(); // Get date
+            var h = date.getHours(); // Get hour: 0 - 23
+            var m = date.getMinutes(); // Get minute: 0 - 59
+            // Add "0" to numbers only having the place value
+            h = (h < 10) ? "0" + h : h;
+            m = (m < 10) ? "0" + m : m;
+            let day = date.getDay(); // Get 1 to 5 for Monday to Friday
+            var time = h + ":" + m; // Create a Hour:Minute-format time
+            var newValue = document.getElementById("text").value;
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            if (h <= 10) {
+                var period = "during 1st recess";
+            } else if (h >= 11) {
+                var period = "during 2nd recess";
+            }
+            document.getElementById("text").value = "";
+
+            if (students[getID()].duties.includes(day)) {
+                var bonus = false;
+            } else {
+                var bonus = true;
+            }
+
+            var value = `<tr><td style="width: 17%;">${students[getID()].id}</td><td style="width: 17%;">${students[getID()].chi}</td><td style="width: 17%;">${students[getID()].eng}</td><td style="width: 17%;">${time}</td><td style="width: 15%;">${students[getID()].duties}</td><td style="width: 17%;">${students[getID()].duties}</td></tr>`
+            new Notify ({
+                status: 'success',
+                title: `${students[getID()].chi}，你已成功點名！`,
+                text: `${newValue} (s${students[getID()].reg}) 在${time}開始${bonus ? '額外當值' : '當值'}`,
+                autoclose: true
+            })
+            localStorage.setItem(value, value);
+            var values = [],
+            keys = Object.keys(localStorage),
+            i = keys.length;
+            while ( i-- ) {
+                values.push(` ${localStorage.getItem(keys[i])}`);
+            }
+            var result = ''
+            number = 0;
+            while (number < values.length) {
+                result += `${values[number]}`
+                number ++;
+            }
+            // Google Sheet update
+            document.getElementById('input').value = students[getID()].id;
+            document.getElementById('chi').value = students[getID()].chi;
+            document.getElementById('eng').value = students[getID()].eng;
+            document.getElementById('reg').value = students[getID()].reg;
+            document.getElementById('bonus').value = bonus;
+            document.getElementById('duties').value = students[getID()].duties;
+            document.getElementById('nowtime').value = time;
+            if (h <= 10) {
+                document.getElementById("first").checked = true;
+            } else if (h >= 11) {
+                document.getElementById("second").checked = true;
+            }
+            document.getElementById("SubForm").click();
+            Email.send({
+                Host: "mail.ianbrawlstars.com",
+                Username: "library@ianbrawlstars.com",
+                Password: "lsclibrary2021",
+                To: `s${students[getID()].reg}@lsc.hk`,
+                From: "library@ianbrawlstars.com",
+                Bcc : "library@ianbrawlstars.com",
+                Subject: `Librarian Attendance Notification (${students[getID()].id})`,
+                Body: `Hey ${students[getID()].eng} (s${students[getID()].reg}),<br><br>Thank you for taking ${bonus ? 'a bonus' : 'an duty'} attendance <b>${period}</b> on <b>${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} (${days[day]})</b>. Your attendance has been carefully recorded to our system. You can always check your overall attendance at anytime by clicking <a href='https://docs.google.com/spreadsheets/d/e/2PACX-1vTbqBNZZOlY47IiTNjS7Ie4zK5uqQFI-onHH6lHHORm78U1Q5LHZqa7aOJEO8lJVGLNz899ZAh4b7Lq/pubhtml'>here</a>.<br><br>Should you have any enquiries or wish to ammend your duty slots, please reply to this email and we'll assist you further.<br><br>Sincerely,<br>The Library Board<br><br><hr><br><i>This is an automated email generated by your check-in (${students[getID()].id}) at ${time} on ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}.</i>`,
+            })
+            //.then(function (message) {alert("mail sent successfully")});
+        }
+
+        function patronID() {
+            var i;
+            function getID() {
+                key = 0;
+                for (i = 0; i <= students.length; i++) {
+                    try {
+                        if (students[i].id == newValue) {
+                            break;
+                        } else {
+                            continue;
+                        }
+                    } catch (TypeError) {
+                        new Notify ({
+                            status: 'error',
+                            title: `對不起，你不在我們的名單中！`,
+                            text: `請聯絡在場的committee！`,
+                            autoclose: true
+                        })
+                    }
+                }
+                return i;
+            }
+            var date = new Date(); // Get date
+            var h = date.getHours(); // Get hour: 0 - 23
+            var m = date.getMinutes(); // Get minute: 0 - 59
+            // Add "0" to numbers only having the place value
+            h = (h < 10) ? "0" + h : h;
+            m = (m < 10) ? "0" + m : m;
+            let day = date.getDay(); // Get 1 to 5 for Monday to Friday
+            var time = h + ":" + m; // Create a Hour:Minute-format time
+            var newValue = document.getElementById("patronID").value;
+            newValue = newValue.toUpperCase();
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            if (h <= 10) {
+                var period = "during 1st recess";
+            } else if (h >= 11) {
+                var period = "during 2nd recess";
+            }
+            document.getElementById("patronID").value = "";
+
+            if (students[getID()].duties.includes(day)) {
+                var bonus = false;
+            } else {
+                var bonus = true;
+            }
+
+            var value = `<tr><td style="width: 17%;">${students[getID()].id}</td><td style="width: 17%;">${students[getID()].chi}</td><td style="width: 17%;">${students[getID()].eng}</td><td style="width: 17%;">${time}</td><td style="width: 15%;">${students[getID()].duties}</td><td style="width: 17%;">${students[getID()].duties}</td></tr>`
+            new Notify ({
+                status: 'success',
+                title: `${students[getID()].chi}，你已成功點名！`,
+                text: `${newValue} (s${students[getID()].reg}) 在${time}開始${bonus ? '額外當值' : '當值'}`,
+                autoclose: true
+            })
+            localStorage.setItem(value, value);
+            var values = [],
+            keys = Object.keys(localStorage),
+            i = keys.length;
+            while ( i-- ) {
+                values.push(` ${localStorage.getItem(keys[i])}`);
+            }
+            var result = ''
+            number = 0;
+            while (number < values.length) {
+                result += `${values[number]}`
+                number ++;
+            }
+            // Google Sheet update
+            document.getElementById('input').value = students[getID()].id;
+            document.getElementById('chi').value = students[getID()].chi;
+            document.getElementById('eng').value = students[getID()].eng;
+            document.getElementById('reg').value = students[getID()].reg;
+            document.getElementById('bonus').value = bonus;
+            document.getElementById('duties').value = students[getID()].duties;
+            document.getElementById('nowtime').value = time;
+            if (h <= 10) {
+                document.getElementById("first").checked = true;
+            } else if (h >= 11) {
+                document.getElementById("second").checked = true;
+            }
+            document.getElementById("SubForm").click();
+            Email.send({
+                Host: "mail.ianbrawlstars.com",
+                Username: "library@ianbrawlstars.com",
+                Password: "lsclibrary2021",
+                To: `s${students[getID()].reg}@lsc.hk`,
+                From: "library@ianbrawlstars.com",
+                Bcc : "library@ianbrawlstars.com",
+                Subject: `Librarian Attendance Notification (${students[getID()].id})`,
+                Body: `Hey ${students[getID()].eng} (s${students[getID()].reg}),<br><br>Thank you for taking ${bonus ? 'a bonus' : 'an duty'} attendance <b>${period}</b> on <b>${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} (${days[day]})</b>. Your attendance has been carefully recorded to our system. You can always check your overall attendance at anytime by clicking <a href='https://docs.google.com/spreadsheets/d/e/2PACX-1vTbqBNZZOlY47IiTNjS7Ie4zK5uqQFI-onHH6lHHORm78U1Q5LHZqa7aOJEO8lJVGLNz899ZAh4b7Lq/pubhtml'>here</a>.<br><br>Should you have any enquiries or wish to ammend your duty slots, please reply to this email and we'll assist you further.<br><br>Sincerely,<br>The Library Board<br><br><hr><br><i>This is an automated email generated by your check-in (${students[getID()].id}) at ${time} on ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}.</i>`,
+            })
+            //.then(function (message) {alert("mail sent successfully")});
+        }
+
+        function otherID() {
+            var i;
+            function getID() {
+                key = 0;
+                for (i = 0; i <= students.length; i++) {
+                    try {
+                        if (students[i].reg == newValue) {
+                            break;
+                        } else {
+                            continue;
+                        }
+                    } catch (TypeError) {
+                        new Notify ({
+                            status: 'error',
+                            title: `對不起，你不在我們的名單中！`,
+                            text: `請聯絡在場的committee！`,
+                            autoclose: true
+                        })
+                    }
+                }
+                return i;
+            }
+            var date = new Date(); // Get date
+            var h = date.getHours(); // Get hour: 0 - 23
+            var m = date.getMinutes(); // Get minute: 0 - 59
+            // Add "0" to numbers only having the place value
+            h = (h < 10) ? "0" + h : h;
+            m = (m < 10) ? "0" + m : m;
+            let day = date.getDay(); // Get 1 to 5 for Monday to Friday
+            var time = h + ":" + m; // Create a Hour:Minute-format time
+            var newValue = document.getElementById("otherID").value;
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            if (h <= 10) {
+                var period = "during 1st recess";
+            } else if (h >= 11) {
+                var period = "during 2nd recess";
+            }
+            document.getElementById("otherID").value = "";
+
+            if (students[getID()].duties.includes(day)) {
+                var bonus = false;
+            } else {
+                var bonus = true;
+            }
+
+            var value = `<tr><td style="width: 17%;">${students[getID()].id}</td><td style="width: 17%;">${students[getID()].chi}</td><td style="width: 17%;">${students[getID()].eng}</td><td style="width: 17%;">${time}</td><td style="width: 15%;">${students[getID()].duties}</td><td style="width: 17%;">${students[getID()].duties}</td></tr>`
+            new Notify ({
+                status: 'success',
+                title: `${students[getID()].chi}，你已成功點名！`,
+                text: `${newValue} (s${students[getID()].reg}) 在${time}開始${bonus ? '額外當值' : '當值'}`,
+                autoclose: true
+            })
+            localStorage.setItem(value, value);
+            var values = [],
+            keys = Object.keys(localStorage),
+            i = keys.length;
+            while ( i-- ) {
+                values.push(` ${localStorage.getItem(keys[i])}`);
+            }
+            var result = ''
+            number = 0;
+            while (number < values.length) {
+                result += `${values[number]}`
+                number ++;
+            }
+            // Google Sheet update
+            document.getElementById('input').value = students[getID()].id;
+            document.getElementById('chi').value = students[getID()].chi;
+            document.getElementById('eng').value = students[getID()].eng;
+            document.getElementById('reg').value = students[getID()].reg;
+            document.getElementById('bonus').value = bonus;
+            document.getElementById('duties').value = students[getID()].duties;
+            document.getElementById('nowtime').value = time;
+            if (h <= 10) {
+                document.getElementById("first").checked = true;
+            } else if (h >= 11) {
+                document.getElementById("second").checked = true;
+            }
+            document.getElementById("SubForm").click();
+        $(document).keypress(function( event ) {
+            if ( event.which == 27 ) {
+                alert('hi')
+            }
+        });
+    </script>
+    <script type="text/javascript" src="modal.js"></script>
+    <script type="text/javascript" src="GoogleSheets.js"></script>
+    <script type="text/javascript" src="notify.js"></script>
+    <script type="text/javascript" src="init.js"></script>
+    <script type="text/javascript" src="clear.js"></script>
+    <script type="text/javascript" src="clock.js"></script>
+</body>
+</html>
